@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Math-Inspired To-Do List</title>
+    <style>
+        :root {
+            --primary-color: rgba(255, 255, 255, 0.9);
+            --secondary-color: #f0f0f0;
+            --text-color: #333;
+            --accent-color: #ff6b6b;
+            --checked-color: #4ecdc4;
+            --blur: 10px;
+            --border-radius: 12px;
+            --math-bg: #f7f7f7;
+            --card-bg: white;
+            --footer-bg: white;
+            --footer-text: #777;
+            --border-color: #e0e0e0;
+            --shadow-color: rgba(0, 0, 0, 0.08);
+            --empty-state-color: #aaa;
+            --checkbox-border: #ddd;
+            --delete-btn-color: #ccc;
+            --watermark-opacity: 0.03;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --primary-color: rgba(30, 30, 30, 0.9);
+                --secondary-color: #2a2a2a;
+                --text-color: #f0f0f0;
+                --math-bg: #121212;
+                --card-bg: #1e1e1e;
+                --footer-bg: #1a1a1a;
+                --footer-text: #aaa;
+                --border-color: #333;
+                --shadow-color: rgba(0, 0, 0, 0.3);
+                --empty-state-color: #666;
+                --checkbox-border: #444;
+                --delete-btn-color: #555;
+                --watermark-opacity: 0.05;
+            }
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        body {
+            background: var(--math-bg);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 20px;
+            color: var(--text-color);
+            position: relative;
+            padding-bottom: 60px;
+            background-image: radial-gradient(circle at 10% 20%, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 90%);
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            margin-top: 30px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            position: relative;
+        }
+
+        .header h1 {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 5px;
+            color: var(--text-color);
+            position: relative;
+            display: inline-block;
+        }
+
+        .header h1::after {
+            content: "½";
+            position: absolute;
+            top: -15px;
+            right: -20px;
+            font-size: 24px;
+            color: var(--accent-color);
+            transform: rotate(-15deg);
+        }
+
+        .math-card {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 25px;
+            box-shadow: 0 10px 30px var(--shadow-color);
+            margin-bottom: 20px;
+            border: 1px solid var(--border-color);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .math-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(90deg, #ff6b6b, #4ecdc4);
+        }
+
+        .search-container {
+            display: flex;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 14px 15px 14px 40px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            background: var(--card-bg);
+            color: var(--text-color);
+            font-size: 16px;
+            outline: none;
+            box-shadow: 0 2px 5px var(--shadow-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--empty-state-color);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--empty-state-color);
+        }
+
+        .add-task-container {
+            display: flex;
+            margin-bottom: 20px;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: 0 3px 10px var(--shadow-color);
+        }
+
+        .task-input {
+            flex: 1;
+            padding: 14px 15px;
+            border: 1px solid var(--border-color);
+            border-right: none;
+            background: var(--card-bg);
+            color: var(--text-color);
+            font-size: 16px;
+            outline: none;
+        }
+
+        .add-btn {
+            padding: 0 20px;
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .add-btn:hover {
+            background: #ff5252;
+        }
+
+        .task-list {
+            list-style: none;
+        }
+
+        .task-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            margin-bottom: 10px;
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            transition: all 0.3s ease;
+            border-left: 4px solid transparent;
+            box-shadow: 0 2px 5px var(--shadow-color);
+            position: relative;
+        }
+
+        .task-item.checked {
+            border-left: 4px solid var(--checked-color);
+            background: var(--secondary-color);
+        }
+
+        .task-checkbox {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 22px;
+            height: 22px;
+            border: 2px solid var(--checkbox-border);
+            border-radius: 6px;
+            margin-right: 15px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .task-checkbox:checked {
+            background-color: var(--checked-color);
+            border-color: var(--checked-color);
+        }
+
+        .task-checkbox:checked::after {
+            content: "✓";
+            color: white;
+            font-size: 14px;
+        }
+
+        .task-text {
+            flex: 1;
+            font-size: 16px;
+            word-break: break-word;
+        }
+
+        .delete-btn {
+            background: none;
+            border: none;
+            color: var(--delete-btn-color);
+            font-size: 20px;
+            cursor: pointer;
+            margin-left: 10px;
+            transition: all 0.2s ease;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+        .delete-btn:hover {
+            color: var(--accent-color);
+            background: rgba(255, 107, 107, 0.1);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 30px;
+            color: var(--empty-state-color);
+            font-size: 16px;
+        }
+
+        .footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            text-align: center;
+            padding: 15px;
+            background: var(--footer-bg);
+            font-size: 14px;
+            color: var(--footer-text);
+            box-shadow: 0 -2px 10px var(--shadow-color);
+            border-top: 1px solid var(--border-color);
+        }
+
+        .math-symbol {
+            position: absolute;
+            font-size: 120px;
+            opacity: var(--watermark-opacity);
+            z-index: 0;
+            pointer-events: none;
+            color: var(--text-color);
+        }
+
+        .symbol-1 {
+            top: 20%;
+            right: 10%;
+            transform: rotate(15deg);
+        }
+
+        .symbol-2 {
+            bottom: 10%;
+            left: 10%;
+            transform: rotate(-10deg);
+        }
+
+        @media (max-width: 500px) {
+            .container {
+                margin-top: 20px;
+            }
+            
+            .math-card {
+                padding: 20px;
+            }
+            
+            .footer {
+                font-size: 12px;
+                padding: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>To-Do List</h1>
+        </div>
+        
+        <div class="math-card">
+            <div class="math-symbol symbol-1">½</div>
+            <div class="math-symbol symbol-2">½</div>
+            
+            <div class="search-container">
+                <span class="search-icon">🔍</span>
+                <input type="text" class="search-input" placeholder="Search tasks...">
+            </div>
+            
+            <div class="add-task-container">
+                <input type="text" class="task-input" placeholder="Add a new task...">
+                <button class="add-btn">+</button>
+            </div>
+            
+            <ul class="task-list">
+                <!-- Tasks will be added here dynamically -->
+            </ul>
+            
+            <div class="empty-state" style="display: none;">
+                No tasks found. Add a new task!
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        To-Do List App • Created by HDIVCODE • Since 2025
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const taskInput = document.querySelector('.task-input');
+            const addBtn = document.querySelector('.add-btn');
+            const taskList = document.querySelector('.task-list');
+            const searchInput = document.querySelector('.search-input');
+            const emptyState = document.querySelector('.empty-state');
+            
+            let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+            
+            // Render tasks
+            function renderTasks(filteredTasks = null) {
+                const tasksToRender = filteredTasks || tasks;
+                
+                if (tasksToRender.length === 0) {
+                    taskList.style.display = 'none';
+                    emptyState.style.display = 'block';
+                } else {
+                    taskList.style.display = 'block';
+                    emptyState.style.display = 'none';
+                    
+                    taskList.innerHTML = '';
+                    tasksToRender.forEach((task, index) => {
+                        const taskItem = document.createElement('li');
+                        taskItem.className = `task-item ${task.completed ? 'checked' : ''}`;
+                        
+                        taskItem.innerHTML = `
+                            <input type="checkbox" class="task-checkbox" ${task.completed ? 'checked' : ''} data-index="${index}">
+                            <span class="task-text">${task.text}</span>
+                            <button class="delete-btn" data-index="${index}">×</button>
+                        `;
+                        
+                        taskList.appendChild(taskItem);
+                    });
+                }
+            }
+            
+            // Add new task
+            function addTask() {
+                const text = taskInput.value.trim();
+                if (text) {
+                    tasks.push({ text, completed: false });
+                    localStorage.setItem('tasks', JSON.stringify(tasks));
+                    taskInput.value = '';
+                    renderTasks();
+                }
+            }
+            
+            // Toggle task completion
+            function toggleTask(index) {
+                tasks[index].completed = !tasks[index].completed;
+                localStorage.setItem('tasks', JSON.stringify(tasks));
+                renderTasks();
+            }
+            
+            // Delete task
+            function deleteTask(index) {
+                tasks.splice(index, 1);
+                localStorage.setItem('tasks', JSON.stringify(tasks));
+                renderTasks();
+                
+                // If we're searching, update the search results
+                if (searchInput.value) {
+                    searchTasks();
+                }
+            }
+            
+            // Search tasks
+            function searchTasks() {
+                const searchTerm = searchInput.value.toLowerCase();
+                if (searchTerm) {
+                    const filteredTasks = tasks.filter(task => 
+                        task.text.toLowerCase().includes(searchTerm)
+                    );
+                    renderTasks(filteredTasks);
+                } else {
+                    renderTasks();
+                }
+            }
+            
+            // Event listeners
+            addBtn.addEventListener('click', addTask);
+            
+            taskInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    addTask();
+                }
+            });
+            
+            taskList.addEventListener('click', function(e) {
+                if (e.target.classList.contains('task-checkbox')) {
+                    const index = e.target.getAttribute('data-index');
+                    toggleTask(index);
+                }
+                
+                if (e.target.classList.contains('delete-btn')) {
+                    const index = e.target.getAttribute('data-index');
+                    deleteTask(index);
+                }
+            });
+            
+            searchInput.addEventListener('input', searchTasks);
+            
+            // Initial render
+            renderTasks();
+        });
+    </script>
+</body>
+</html>
